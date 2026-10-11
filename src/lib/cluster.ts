@@ -1,4 +1,4 @@
-import { Type, type Schema } from "@google/genai";
+﻿import { Type, type Schema } from "@google/genai";
 import { z } from "zod";
 import type { ScoredVideo } from "./scorer";
 import type { Settings } from "./types";
@@ -36,7 +36,7 @@ export const clusterResponseSchema: Schema = {
       items: {
         type: Type.OBJECT,
         properties: {
-          name: { type: Type.STRING, description: "Short topic name, for example 'Cursor IDE and AI coding agents'" },
+          name: { type: Type.STRING, description: "Topic name of at most 60 characters, for example 'Cursor IDE and AI coding agents'" },
           slug: { type: Type.STRING, description: "kebab-case version of the name" },
           video_ids: { type: Type.ARRAY, items: { type: Type.STRING }, description: "IDs copied exactly from the list" },
           reason: { type: Type.STRING, description: "One sentence: what these videos have in common" },
@@ -63,7 +63,7 @@ export const CLUSTER_SYSTEM = [
   "- Use only video IDs from the list, copied exactly. Never invent an ID.",
   "- A video may belong to at most one theme. Leave out videos that fit no theme.",
   "- Prefer topics that fit the creator's categories. Ignore giveaways, vlogs and off-topic videos.",
-  "- The theme name should use words that actually appear in the titles or tags.",
+  "- The theme name should use words that actually appear in the titles or tags, and be at most 60 characters.",
   "- Do not mention numbers, views or popularity: you have not been given any.",
 ].join("\n");
 
