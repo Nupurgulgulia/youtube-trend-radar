@@ -1,4 +1,4 @@
-# CLAUDE.md: YouTube Trend Radar (Sunday Content Brief)
+﻿# CLAUDE.md: YouTube Trend Radar (Sunday Content Brief)
 
 You are the engineer building **YouTube Trend Radar**, a final examination project for Mesa School of Business, course "AI and its Applications". The student you are working with is a beginner at coding. Build working software, explain important decisions in plain language, and never pretend something works when you have not verified it.
 
@@ -31,11 +31,11 @@ His categories, keywords, region and email must be configurable. Every brief is 
 2. **Live data.** YouTube Data API v3 and Google News RSS. Mocked data is allowed only in tests and must never reach a real brief.
 3. **Deploy on Vercel.** Next.js (App Router, TypeScript). Scheduling uses Vercel Cron.
 4. **Never invent anything.** No made-up statistics, quota costs, API responses, news items, test results, or "it deployed fine" claims. If you did not run it and see the result, say so.
-5. **Secrets stay on the server.** Every API key and the Supabase service-role key are read only in server code. Never expose them to the browser, never log them, never commit them. `.env.local` must be in `.gitignore` before the first commit.
+5. **Secrets stay on the server.** Every API key and the database connection string are read only in server code. Never expose them to the browser, never log them, never commit them. `.env.local` must be in `.gitignore` before the first commit.
 6. **No em dashes in user-facing text** (brief page, email, UI labels, README prose). Use commas, colons or full stops.
 7. **Numbers come from code, words come from Gemini.** Every metric, count, date, status label and confidence level is computed in TypeScript. Gemini may only describe numbers it was given.
 8. **Keep it student-sized.** Do not add queues, extra databases, extra AI providers or frameworks the map does not show. Prefer small, readable functions over clever abstractions.
-9. **Ask before** `git push`, deploying, running a migration against the live Supabase project, or deleting anything.
+9. **Ask before** `git push`, deploying, running a migration against the live Neon database, or deleting anything.
 
 ---
 
@@ -46,7 +46,7 @@ His categories, keywords, region and email must be configurable. Every brief is 
 | App and API routes | Next.js (App Router) + TypeScript |
 | AI | Gemini Flash via `@google/genai`, JSON mode with `responseSchema` |
 | Validation | `zod` for every external response and every Gemini output |
-| Database | Supabase (Postgres), server-side client with the service-role key |
+| Database | Neon (Postgres) via `@neondatabase/serverless`, server-side only, connection string in `DATABASE_URL` (switched from Supabase at the student's request) |
 | Email | Resend |
 | Scheduling | Vercel Cron |
 | Tests | Vitest with fixture data |
@@ -58,8 +58,7 @@ His categories, keywords, region and email must be configurable. Every brief is 
 YOUTUBE_API_KEY=
 GEMINI_API_KEY=
 GEMINI_MODEL=              # verify the current Flash ID before use
-SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY= # server only
+DATABASE_URL=              # Neon connection string, server only
 RESEND_API_KEY=
 BRIEF_FROM_EMAIL=          # e.g. onboarding@resend.dev until a domain is verified
 BRIEF_TO_EMAIL=
@@ -82,7 +81,7 @@ Build each step as a separate module under `src/lib/` with a single responsibili
 | 2 | **Vercel Cron** | Starts one run per ISO week (see section 9). Rejects requests without the cron secret. |
 | 3 | **YouTube Data API** | Trending in the configured region and category, plus recent uploads per keyword, plus statistics and details per video. |
 | 4 | **Google News RSS** | Recent headlines per theme or keyword, with links. **Context only.** A headline never proves a YouTube trend. |
-| 5 | **Supabase memory** | Settings, dated video snapshots, past themes, past briefs, run log. |
+| 5 | **Database memory (Neon; the map still says Supabase)** | Settings, dated video snapshots, past themes, past briefs, run log. |
 | 6 | **Collector** | Plans calls against a quota budget, skips IDs already fetched in this run, removes duplicates, marks deleted or private videos, records failed or partial sources, writes **dated snapshots**. |
 | 7 | **Scorer (code only)** | Computes per-video and per-group metrics, momentum labels and format and length comparisons. No AI. |
 | 8 | **Gemini call 1: cluster** | Proposes 3 to 5 candidate themes from the scored videos. Strict JSON. |
@@ -96,9 +95,9 @@ Build each step as a separate module under `src/lib/` with a single responsibili
 
 ---
 
-## 5. Database (Supabase)
+## 5. Database (Neon Postgres)
 
-Put the schema in `supabase/migrations/0001_init.sql`. Keep it small. Use stable IDs, unique constraints and upserts so a retried run never duplicates rows, and **never overwrite an older snapshot**.
+Put the schema in `db/migrations/0001_init.sql`. Keep it small. Use stable IDs, unique constraints and upserts so a retried run never duplicates rows, and **never overwrite an older snapshot**.
 
 - **`settings`**: a single row (`id = 1`). Holds `categories text[]`, `keywords text[]`, `region_code`, `relevance_language`, `category_ids int[]`, `email`, `updated_at`.
 - **`runs`**:
@@ -115,7 +114,7 @@ Put the schema in `supabase/migrations/0001_init.sql`. Keep it small. Use stable
 - **`decisions`**: `week_id`, `theme_slug`, `decision` (`film | skip | investigate`), `note text null`, `decided_at`. Add `unique (week_id, theme_slug)`.
 - **`llm_logs`**: `run_id`, `task` (`cluster | write`), `model`, `attempt`, `tokens_in`, `tokens_out`, `ok boolean`, `error text null`, `created_at`.
 
-Turn Row Level Security on for every table. All access goes through server routes that use the service-role key.
+Turn Row Level Security on for every table. All access goes through server code that connects as the table owner using `DATABASE_URL`.
 
 ---
 
@@ -129,7 +128,7 @@ Turn Row Level Security on for every table. All access goes through server route
    - `channels.list?id=` in batches of 50 for subscriber counts. This is optional: it is used only to flag small channels and big channels, never to change status.
 3. **Budget first.**
    - Write `estimateQuota(settings)` and call it before any request.
-   - If the estimate exceeds `YOUTUBE_DAILY_QUOTA × QUOTA_SAFETY_MARGIN`, cut the lowest-priority keywords, and say in the brief which ones were skipped and why.
+   - If the estimate exceeds `YOUTUBE_DAILY_QUOTA Ã— QUOTA_SAFETY_MARGIN`, cut the lowest-priority keywords, and say in the brief which ones were skipped and why.
    - Count actual units used and store them in `runs.quota_used`.
 4. **No duplicate work.** Merge IDs from trending and search into a set before calling `videos.list`.
 5. **Failures are data.**
@@ -164,8 +163,8 @@ Put every threshold in `src/lib/config/scoring.ts` as a named, commented constan
 
 | Label | When it applies |
 |---|---|
-| `rising` | A comparable earlier snapshot exists for at least `MIN_TRACKED_VIDEOS` videos in the theme (default 3), **and** either (a) median views gained per day rose by at least `RISING_RATIO` (default 1.25×) versus the previous interval, or (b) the number of distinct creators on the topic grew versus the matching past theme. |
-| `fading` | Comparable history exists, **and** median views gained per day fell to `FADING_RATIO` or below (default 0.75×), **and** new uploads on the topic did not increase. |
+| `rising` | A comparable earlier snapshot exists for at least `MIN_TRACKED_VIDEOS` videos in the theme (default 3), **and** either (a) median views gained per day rose by at least `RISING_RATIO` (default 1.25Ã—) versus the previous interval, or (b) the number of distinct creators on the topic grew versus the matching past theme. |
+| `fading` | Comparable history exists, **and** median views gained per day fell to `FADING_RATIO` or below (default 0.75Ã—), **and** new uploads on the topic did not increase. |
 | `established` | Several creators, strong views per day within their age band, but no history shows acceleration or decline. |
 | `insufficient_evidence` | Too few videos or creators, missing metrics, or snapshots too close together to compare. |
 
@@ -327,7 +326,7 @@ Work in this order. Finish each "Done when" before moving on, and commit after e
 |---|---|---|
 | 0 | Look at the folder. If code already exists, audit it against this file and the map first, and report what is built, partial, missing or broken. | The student has a short findings list. |
 | 1 | Next.js + TypeScript scaffold, `.env.example`, `.gitignore`, Vitest, zod | `npm run build` and `npm test` both run. |
-| 2 | Migration `0001_init.sql` + Supabase server client | The student has applied the migration (after you ask), and the tables exist. |
+| 2 | Migration `0001_init.sql` + Neon server client | The student has applied the migration (after you ask), and the tables exist. |
 | 3 | `docs/quota.md` (verified), quota estimator + tests | Estimator tests pass. |
 | 4 | Collector (YouTube + News) with fixtures and failure handling | Collector tests pass, and a manual dry run against the live API stores videos and snapshots. Report only what you observed. |
 | 5 | Scorer, momentum, formats, confidence + tests | All scoring tests pass, and `docs/scoring.md` is written. |

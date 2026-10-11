@@ -1,6 +1,7 @@
--- YouTube Trend Radar: initial schema (map step 5, Supabase memory).
+-- YouTube Trend Radar: initial schema (map step 5, database memory). Runs on Neon Postgres.
 -- Retries must never duplicate rows, and older snapshots are never overwritten.
--- RLS is on for every table with no policies: only the server (service-role key) can read or write.
+-- RLS is on for every table with no policies. The server connects as the table owner,
+-- which bypasses RLS; any other database role (for example a future public Data API) sees nothing.
 
 -- 1. Settings: a single row that Ishaan edits on the Settings page.
 create table settings (

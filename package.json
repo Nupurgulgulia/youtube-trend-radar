@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@google/genai": "^2.28.0",
-    "@supabase/supabase-js": "^2.117.3",
+    "@neondatabase/serverless": "^1.2.0",
     "fast-xml-parser": "^5.11.2",
     "next": "15.5.27",
     "react": "19.1.0",
