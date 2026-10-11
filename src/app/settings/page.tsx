@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { logout } from "../actions";
 import { isAdmin } from "@/lib/auth";
 import { loadSettings } from "@/lib/store";
+import RunNow from "./RunNow";
 import SettingsForm from "./SettingsForm";
 
 // Map step 1: Ishaan edits categories, keywords, region, language, category IDs and email.
@@ -15,6 +16,7 @@ export default async function Settings() {
       <h1>Settings</h1>
       <p className="muted">Changes apply from the next run.</p>
       <SettingsForm settings={settings} />
+      <RunNow />
       <form action={logout}>
         <button type="submit">Log out</button>
       </form>
