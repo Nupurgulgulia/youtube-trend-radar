@@ -62,4 +62,8 @@ If either limit is exceeded, `planQuota()` drops keywords from the **end** of th
 2. **Cost does not depend on which `part` values are requested.** The page lists a flat cost per method and says nothing about parts.
 3. **The project uses the default allocation.** Confirm both numbers on Google Cloud Console > APIs & Services > YouTube Data API v3 > Quotas.
 4. **This app is the only user of the API key.** The API can't report how much quota is left, so the budget assumes nothing else used it that day.
-5. **Category 28 is "Science & Technology".** This will be checked with `videoCategories.list` during the first live run.
+
+## Confirmed by a live run
+
+- **Category 28 is "Science & Technology" in region IN.** Checked with `videoCategories.list` on 2026-10-11.
+- **First live collection (2026-10-11, default settings):** estimated 14 general units (worst case) and 6 searches. Used 14 units, plus 1 for the category check, and 6 searches.
