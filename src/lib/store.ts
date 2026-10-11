@@ -1,6 +1,8 @@
 import "server-only";
 import { db } from "./db";
 import type { CollectedVideo, Snapshot } from "./collector";
+import type { SnapshotPoint } from "./momentum";
+import type { VideoInput } from "./scorer";
 import type { Settings } from "./types";
 
 // Database reads and writes for collection (map steps 5 and 6).
@@ -89,6 +91,42 @@ export async function insertSnapshots(snapshots: Snapshot[], runId: string): Pro
     on conflict (video_id, observed_on) do nothing
     returning video_id`;
   return inserted.length;
+}
+
+// Every video snapshotted by a run, with that run's numbers, ready for the Scorer.
+export async function loadRunVideos(runId: string): Promise<VideoInput[]> {
+  const rows = await db()`
+    select v.video_id, v.channel_id, v.channel_title, v.title, v.published_at, v.duration_sec, v.tags,
+           s.views, s.likes, s.comments
+    from video_snapshots s join videos v on v.video_id = s.video_id
+    where s.run_id = ${runId}`;
+  return rows.map((r) => ({
+    videoId: r.video_id,
+    channelId: r.channel_id,
+    channelTitle: r.channel_title,
+    title: r.title,
+    publishedAt: new Date(r.published_at).toISOString(),
+    durationSec: r.duration_sec,
+    tags: r.tags,
+    views: r.views === null ? null : Number(r.views),
+    likes: r.likes === null ? null : Number(r.likes),
+    comments: r.comments === null ? null : Number(r.comments),
+  }));
+}
+
+// All stored snapshots for these videos, oldest first, for momentum.
+export async function loadSnapshotHistories(videoIds: string[]): Promise<Map<string, SnapshotPoint[]>> {
+  const out = new Map<string, SnapshotPoint[]>();
+  if (videoIds.length === 0) return out;
+  const rows = await db()`
+    select video_id, observed_at, views from video_snapshots
+    where video_id = any(${videoIds}::text[]) order by observed_at`;
+  for (const r of rows) {
+    const list = out.get(r.video_id) ?? [];
+    list.push({ observedAt: new Date(r.observed_at).toISOString(), views: Number(r.views) });
+    out.set(r.video_id, list);
+  }
+  return out;
 }
 
 // Flag videos that no longer come back from the API. Their history is kept.
