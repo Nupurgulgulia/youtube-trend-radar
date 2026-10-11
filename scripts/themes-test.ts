@@ -1,0 +1,75 @@
+// Live dry run of Gemini call 1 + the Theme Gate (checkpoint 6), using the most recent
+// collection already in the database. Logs each Gemini call to llm_logs.
+// It does NOT save themes, so a test can never show up as a "past theme" later.
+// Run with: npm run themes:test
+
+import { selectCandidates } from "@/lib/cluster";
+import { db } from "@/lib/db";
+import { env } from "@/lib/env";
+import { geminiGenerate } from "@/lib/gemini";
+import { scoreVideos } from "@/lib/scorer";
+import { insertLlmLogs, loadPastThemes, loadRunVideos, loadSettings, loadSnapshotHistories } from "@/lib/store";
+import { runThemeGate } from "@/lib/theme-gate";
+import { isoWeekId } from "@/lib/week";
+
+async function main() {
+  const [run] = await db()`
+    select r.id, r.week_id, max(s.observed_at) as observed_at
+    from runs r join video_snapshots s on s.run_id = r.id
+    group by r.id order by max(s.observed_at) desc limit 1`;
+  if (!run) throw new Error("No collected run found. Run npm run collect:test first.");
+  const observedAt = new Date(run.observed_at).toISOString();
+
+  const settings = await loadSettings();
+  const videos = scoreVideos(await loadRunVideos(run.id), observedAt);
+  const histories = await loadSnapshotHistories(videos.map((v) => v.videoId));
+  const pastThemes = await loadPastThemes(isoWeekId(new Date(observedAt)));
+  const candidates = selectCandidates(videos);
+  const model = env("GEMINI_MODEL");
+
+  console.log(`Run ${run.week_id}: ${videos.length} videos, ${candidates.length} sent to ${model}, ${pastThemes.length} past themes`);
+
+  const t0 = Date.now();
+  const result = await runThemeGate({
+    generate: geminiGenerate(env("GEMINI_API_KEY"), model),
+    model,
+    settings,
+    candidates,
+    allVideos: videos,
+    histories,
+    pastThemes,
+    observedAt,
+  });
+  const ms = Date.now() - t0;
+  await insertLlmLogs(run.id, result.logs);
+
+  console.log("\n== Gemini calls");
+  for (const l of result.logs) {
+    console.log(`  attempt ${l.attempt}: ${l.ok ? "ok" : "failed"}, tokens in ${l.tokensIn ?? "?"}, out ${l.tokensOut ?? "?"}${l.error ? `, error: ${l.error}` : ""}`);
+  }
+  console.log(`  time: ${ms} ms`);
+
+  console.log(`\n== Themes that passed the gate: ${result.themes.length}`);
+  const byId = new Map(videos.map((v) => [v.videoId, v]));
+  for (const t of result.themes) {
+    const m = t.metrics;
+    console.log(`\n* ${t.name} [${t.slug}] ${t.isNew ? "New this week" : `Recurring since ${t.recurringFromWeek}`}`);
+    console.log(`  Gemini's reason: ${t.reason}`);
+    console.log(`  ${m.videoCount} videos, ${m.creatorCount} creators, median views/day ${m.medianViewsPerDay}, band index ${m.medianBandIndex}, engagement ${m.medianEngagement} (n=${m.engagementSample})`);
+    console.log(`  momentum: ${m.momentum} (${m.momentumReasons.join(" ")})`);
+    console.log(`  confidence: ${m.confidence} (${m.confidenceReasons.join("; ")})`);
+    for (const id of t.videoIds.slice(0, 4)) {
+      const v = byId.get(id)!;
+      console.log(`    - ${v.channelTitle} | ${v.title.slice(0, 70)}`);
+    }
+  }
+
+  console.log(`\n== Dropped: ${result.dropped.length}`);
+  for (const d of result.dropped) console.log(`  ${d.name}: ${d.errors.join("; ")}`);
+  if (result.failure) console.log(`\nFAILURE: ${result.failure}`);
+}
+
+main().catch((e) => {
+  console.error("Themes test failed:", e instanceof Error ? e.message.split("\n")[0] : "Unknown error");
+  process.exit(1);
+});

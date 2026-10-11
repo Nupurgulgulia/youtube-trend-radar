@@ -3,6 +3,8 @@ import { db } from "./db";
 import type { CollectedVideo, Snapshot } from "./collector";
 import type { SnapshotPoint } from "./momentum";
 import type { VideoInput } from "./scorer";
+import type { LlmLog } from "./gemini";
+import type { StoredPastTheme } from "./theme-gate";
 import type { Settings } from "./types";
 
 // Database reads and writes for collection (map steps 5 and 6).
@@ -127,6 +129,33 @@ export async function loadSnapshotHistories(videoIds: string[]): Promise<Map<str
     out.set(r.video_id, list);
   }
   return out;
+}
+
+// Themes from earlier real weeks (ISO week IDs only, so manual test runs never count),
+// for the "New this week" / "Recurring since" label and momentum comparison.
+export async function loadPastThemes(beforeWeekId: string): Promise<StoredPastTheme[]> {
+  const rows = await db()`
+    select week_id, slug, name, recurring_from_week, metrics
+    from themes
+    where week_id ~ '^[0-9]{4}-W[0-9]{2}$' and week_id < ${beforeWeekId}
+    order by week_id desc
+    limit 40`;
+  return rows.map((r) => ({
+    weekId: r.week_id,
+    slug: r.slug,
+    name: r.name,
+    recurringFromWeek: r.recurring_from_week,
+    creatorCount: Number(r.metrics?.creatorCount ?? 0),
+    recentUploadCount: Number(r.metrics?.recentUploadCount ?? 0),
+  }));
+}
+
+export async function insertLlmLogs(runId: string, logs: LlmLog[]): Promise<void> {
+  for (const l of logs) {
+    await db()`
+      insert into llm_logs (run_id, task, model, attempt, tokens_in, tokens_out, ok, error)
+      values (${runId}, ${l.task}, ${l.model}, ${l.attempt}, ${l.tokensIn}, ${l.tokensOut}, ${l.ok}, ${l.error})`;
+  }
 }
 
 // Flag videos that no longer come back from the API. Their history is kept.
