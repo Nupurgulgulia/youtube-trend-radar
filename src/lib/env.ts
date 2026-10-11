@@ -18,6 +18,7 @@ const schemas = {
   ADMIN_PASSWORD: required,
   APP_URL: z.url(),
   YOUTUBE_DAILY_QUOTA: z.coerce.number().int().positive(),
+  YOUTUBE_SEARCH_DAILY_LIMIT: z.coerce.number().int().positive(),
   QUOTA_SAFETY_MARGIN: z.coerce.number().gt(0).max(1),
 } as const;
 

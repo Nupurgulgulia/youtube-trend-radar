@@ -66,6 +66,7 @@ CRON_SECRET=               # Vercel sends this as "Authorization: Bearer <CRON_S
 ADMIN_PASSWORD=            # protects Settings and the manual run button
 APP_URL=
 YOUTUBE_DAILY_QUOTA=10000  # confirm in Google Cloud Console for this project
+YOUTUBE_SEARCH_DAILY_LIMIT=100 # search.list has its own daily bucket (docs checked 2026-10-11, see docs/quota.md)
 QUOTA_SAFETY_MARGIN=0.5    # use at most this fraction of the remaining daily quota per run
 ```
 
