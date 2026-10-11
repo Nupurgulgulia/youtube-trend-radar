@@ -13,7 +13,8 @@
     "collect:test": "node --env-file=.env.local --conditions=react-server --import tsx scripts/collect-test.ts",
     "score:test": "node --env-file=.env.local --conditions=react-server --import tsx scripts/score-test.ts",
     "themes:test": "node --env-file=.env.local --conditions=react-server --import tsx scripts/themes-test.ts",
-    "check:gemini": "node --env-file=.env.local scripts/check-gemini.mjs"
+    "check:gemini": "node --env-file=.env.local scripts/check-gemini.mjs",
+    "brief:test": "node --env-file=.env.local --conditions=react-server --import tsx scripts/brief-test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.28.0",
