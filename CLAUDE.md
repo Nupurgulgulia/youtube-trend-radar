@@ -1,4 +1,4 @@
-﻿# CLAUDE.md: YouTube Trend Radar (Sunday Content Brief)
+# CLAUDE.md: YouTube Trend Radar (Sunday Content Brief)
 
 You are the engineer building **YouTube Trend Radar**, a final examination project for Mesa School of Business, course "AI and its Applications". The student you are working with is a beginner at coding. Build working software, explain important decisions in plain language, and never pretend something works when you have not verified it.
 
@@ -82,7 +82,7 @@ Build each step as a separate module under `src/lib/` with a single responsibili
 | 2 | **Vercel Cron** | Starts one run per ISO week (see section 9). Rejects requests without the cron secret. |
 | 3 | **YouTube Data API** | Trending in the configured region and category, plus recent uploads per keyword, plus statistics and details per video. |
 | 4 | **Google News RSS** | Recent headlines per theme or keyword, with links. **Context only.** A headline never proves a YouTube trend. |
-| 5 | **Database memory (Neon; the map still says Supabase)** | Settings, dated video snapshots, past themes, past briefs, run log. |
+| 5 | **Database memory (Neon Postgres)** | Settings, dated video snapshots, past themes, past briefs, run log. |
 | 6 | **Collector** | Plans calls against a quota budget, skips IDs already fetched in this run, removes duplicates, marks deleted or private videos, records failed or partial sources, writes **dated snapshots**. |
 | 7 | **Scorer (code only)** | Computes per-video and per-group metrics, momentum labels and format and length comparisons. No AI. |
 | 8 | **Gemini call 1: cluster** | Proposes 3 to 5 candidate themes from the scored videos. Strict JSON. |

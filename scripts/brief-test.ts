@@ -1,4 +1,4 @@
-﻿// Live dry run of steps 7 to 11 (checkpoint 7): score, cluster + Theme Gate, news,
+// Live dry run of steps 7 to 11 (checkpoint 7): score, cluster + Theme Gate, news,
 // write + Publish Gate, using the most recent collection in the database.
 // Logs Gemini calls to llm_logs. Does NOT save themes or a brief, and sends no email.
 // Optional: a path to write the brief JSON to, and --save to store it as a test preview

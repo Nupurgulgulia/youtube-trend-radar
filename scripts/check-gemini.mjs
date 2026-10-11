@@ -1,4 +1,4 @@
-﻿// Checks that GEMINI_API_KEY in .env.local is accepted and GEMINI_MODEL exists.
+// Checks that GEMINI_API_KEY in .env.local is accepted and GEMINI_MODEL exists.
 // Run with: npm run check:gemini
 // Prints the HTTP status and Google's error message only, never the key.
 

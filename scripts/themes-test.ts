@@ -1,4 +1,4 @@
-﻿// Live dry run of Gemini call 1 + the Theme Gate (checkpoint 6), using the most recent
+// Live dry run of Gemini call 1 + the Theme Gate (checkpoint 6), using the most recent
 // collection already in the database. Logs each Gemini call to llm_logs.
 // It does NOT save themes, so a test can never show up as a "past theme" later.
 // Run with: npm run themes:test

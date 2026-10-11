@@ -32,7 +32,7 @@ The rules behind each step are documented in [docs/quota.md](docs/quota.md), [do
 
 Next.js 15 (App Router, TypeScript), Neon Postgres (`@neondatabase/serverless`), Gemini Flash (`@google/genai`), Resend, Vercel Cron, zod, Vitest.
 
-The Components Map and the original brief said Supabase. The database was switched to **Neon** at the student's request on 2026-10-11. Both are hosted Postgres; the schema is the same.
+The original brief said Supabase. The database was switched to **Neon** at the student's request on 2026-10-11, and the Components Map was relabelled to match (steps 5 and 15). Both are hosted Postgres; the schema is the same.
 
 ## Setup
 

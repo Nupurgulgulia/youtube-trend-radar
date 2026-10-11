@@ -1,4 +1,4 @@
-﻿// Runs the Scorer on the most recent collection stored in the database (checkpoint 5).
+// Runs the Scorer on the most recent collection stored in the database (checkpoint 5).
 // Read-only: no API calls, no AI, nothing written.
 // Run with: npm run score:test
 

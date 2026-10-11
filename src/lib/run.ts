@@ -1,4 +1,4 @@
-﻿import { analyse, type AnalyseResult } from "./analyse";
+import { analyse, type AnalyseResult } from "./analyse";
 import type { BriefContent } from "./brief";
 import { collect, type CollectionResult } from "./collector";
 import { briefEmail, failureEmail, type EmailMessage } from "./email";

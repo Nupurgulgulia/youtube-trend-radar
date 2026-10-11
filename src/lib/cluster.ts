@@ -1,4 +1,4 @@
-﻿import { Type, type Schema } from "@google/genai";
+import { Type, type Schema } from "@google/genai";
 import { z } from "zod";
 import type { ScoredVideo } from "./scorer";
 import type { Settings } from "./types";

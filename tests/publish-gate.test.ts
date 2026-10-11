@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { GenerateFn } from "@/lib/gemini";
 import { matchNews } from "@/lib/news-match";
 import {

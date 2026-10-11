@@ -1,4 +1,4 @@
-﻿import { generateJson, type GenerateFn, type LlmLog } from "./gemini";
+import { generateJson, type GenerateFn, type LlmLog } from "./gemini";
 import {
   buildWritePrompt,
   NO_NEWS,
