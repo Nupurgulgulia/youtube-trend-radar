@@ -12,3 +12,16 @@ export function isoWeekId(date: Date): string {
   const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
   return `${isoYear}-W${String(week).padStart(2, "0")}`;
 }
+
+const IST_OFFSET_MS = 5.5 * 3600_000;
+
+// The week a brief belongs to: the ISO week of the most recent Sunday in India time.
+// ISO weeks end on Sunday, so the Sunday cron runs get that week's ID. A manual run on
+// a weekday is treated as a late brief for the Sunday just gone, so it can never use up
+// next Sunday's run (on Monday 12 Oct 2026, plain isoWeekId would say W42, the same
+// week as Sunday 18 Oct, and the Sunday run would then skip).
+export function briefWeekId(now: Date): string {
+  const ist = new Date(now.getTime() + IST_OFFSET_MS); // read its UTC fields as IST
+  const sunday = new Date(Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth(), ist.getUTCDate() - ist.getUTCDay()));
+  return isoWeekId(sunday);
+}

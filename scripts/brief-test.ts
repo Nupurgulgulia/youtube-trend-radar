@@ -13,7 +13,7 @@ import { geminiGenerate } from "@/lib/gemini";
 import { fetchNews, type NewsItem } from "@/lib/news";
 import { saveBrief } from "@/lib/brief-store";
 import { insertLlmLogs, loadDayVideos, loadPastThemes, loadSettings, loadSnapshotHistories } from "@/lib/store";
-import { isoWeekId } from "@/lib/week";
+import { briefWeekId } from "@/lib/week";
 
 async function main() {
   const [latest] = await db()`
@@ -22,7 +22,7 @@ async function main() {
   const [run] = await db()`select id, week_id, source_report, quota_used, quota_estimated from runs order by started_at desc limit 1`;
   if (!latest || !run) throw new Error("No collected data found. Run npm run collect:test first.");
   const observedAt = new Date(latest.observed_at).toISOString();
-  const weekId = isoWeekId(new Date(observedAt));
+  const weekId = briefWeekId(new Date(observedAt));
 
   const settings = await loadSettings();
   const videos = await loadDayVideos(latest.day);

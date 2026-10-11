@@ -10,7 +10,7 @@ import { geminiGenerate } from "@/lib/gemini";
 import { scoreVideos } from "@/lib/scorer";
 import { insertLlmLogs, loadPastThemes, loadDayVideos, loadSettings, loadSnapshotHistories } from "@/lib/store";
 import { runThemeGate } from "@/lib/theme-gate";
-import { isoWeekId } from "@/lib/week";
+import { briefWeekId } from "@/lib/week";
 
 async function main() {
   // The most recent day with snapshots, and the latest run (for logging Gemini calls).
@@ -24,7 +24,7 @@ async function main() {
   const settings = await loadSettings();
   const videos = scoreVideos(await loadDayVideos(latest.day), observedAt);
   const histories = await loadSnapshotHistories(videos.map((v) => v.videoId));
-  const pastThemes = await loadPastThemes(isoWeekId(new Date(observedAt)));
+  const pastThemes = await loadPastThemes(briefWeekId(new Date(observedAt)));
   const candidates = selectCandidates(videos);
   const model = env("GEMINI_MODEL");
 

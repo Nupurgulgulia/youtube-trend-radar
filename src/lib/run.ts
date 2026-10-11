@@ -1,4 +1,4 @@
-import { analyse, type AnalyseResult } from "./analyse";
+﻿import { analyse, type AnalyseResult } from "./analyse";
 import type { BriefContent } from "./brief";
 import { collect, type CollectionResult } from "./collector";
 import { briefEmail, failureEmail, type EmailMessage } from "./email";
@@ -10,7 +10,7 @@ import type { Claim, RunFinish } from "./run-store";
 import type { VideoInput } from "./scorer";
 import type { StoredPastTheme } from "./theme-gate";
 import type { Settings } from "./types";
-import { isoWeekId } from "./week";
+import { briefWeekId } from "./week";
 import type { YouTubeClient } from "./youtube";
 
 // One weekly run, start to finish (map steps 2 to 15, in the order of the map).
@@ -93,7 +93,7 @@ async function sendOnce(deps: RunDeps, weekId: string, kind: "brief" | "failure"
 
 export async function runWeekly(deps: RunDeps, opts: { trigger: Trigger; dryRun: boolean }): Promise<RunOutcome> {
   const startedAt = deps.now();
-  const weekId = isoWeekId(startedAt);
+  const weekId = briefWeekId(startedAt);
   const settings = await deps.store.loadSettings();
   const recipient = settings.email || deps.defaultRecipient;
 

@@ -303,6 +303,16 @@ describe("weekly run", () => {
     expect(before).toBe(50000);
   });
 
+  it("a real manual run on Monday is late for last Sunday and never blocks next Sunday", async () => {
+    const t = setup({ at: "2026-10-12T12:00:00Z" }); // Monday
+    const monday = await runWeekly(t.deps, { trigger: "manual", dryRun: false });
+    expect(monday).toMatchObject({ action: "ran", weekId: "2026-W41", email: "sent" });
+    t.advance(6 * 24 * 60 - 12 * 60 + 30); // Sunday 18 Oct, 00:30 UTC
+    const sunday = await runWeekly(t.deps, { trigger: "main", dryRun: false });
+    expect(sunday).toMatchObject({ action: "ran", weekId: "2026-W42", email: "sent" });
+    expect(t.sent.map((s) => s.idempotencyKey)).toEqual(["brief-2026-W41", "brief-2026-W42"]);
+  });
+
   it("records an error instead of crashing when no recipient is configured", async () => {
     const t = setup();
     t.deps.defaultRecipient = null;
