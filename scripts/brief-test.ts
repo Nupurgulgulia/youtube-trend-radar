@@ -1,8 +1,9 @@
-// Live dry run of steps 7 to 11 (checkpoint 7): score, cluster + Theme Gate, news,
+﻿// Live dry run of steps 7 to 11 (checkpoint 7): score, cluster + Theme Gate, news,
 // write + Publish Gate, using the most recent collection in the database.
 // Logs Gemini calls to llm_logs. Does NOT save themes or a brief, and sends no email.
-// Writes a preview of the brief JSON to the path given as the first argument, if any.
-// Run with: npm run brief:test -- <optional preview path>
+// Optional: a path to write the brief JSON to, and --save to store it as a test preview
+// (week label "preview-<date>"), which the brief page and archive show as a test.
+// Run with: npm run brief:test -- [--save] [preview path]
 
 import { writeFileSync } from "node:fs";
 import { analyse } from "@/lib/analyse";
@@ -10,6 +11,7 @@ import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { geminiGenerate } from "@/lib/gemini";
 import { fetchNews, type NewsItem } from "@/lib/news";
+import { saveBrief } from "@/lib/brief-store";
 import { insertLlmLogs, loadDayVideos, loadPastThemes, loadSettings, loadSnapshotHistories } from "@/lib/store";
 import { isoWeekId } from "@/lib/week";
 
@@ -84,7 +86,14 @@ async function main() {
   console.log(`\n== Coverage: ${b.coverage.videosScanned} videos, ${b.coverage.creators} creators, first run ${b.coverage.firstRun}`);
   b.coverage.limitations.forEach((l) => console.log(`  - ${l}`));
 
-  const out = process.argv[2];
+  if (process.argv.includes("--save")) {
+    const label = `preview-${latest.day}`;
+    b.weekId = label;
+    await saveBrief(run.id, label, result);
+    console.log(`\nSaved as test preview ${label}: open /brief/${label}`);
+  }
+
+  const out = process.argv.slice(2).find((a) => !a.startsWith("--"));
   if (out) {
     writeFileSync(out, JSON.stringify(b, null, 2));
     console.log(`\nPreview written to ${out}`);

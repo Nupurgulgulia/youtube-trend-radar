@@ -1,13 +1,18 @@
-import styles from "./page.module.css";
+import BriefPage from "@/components/BriefPage";
+import { loadLatestBrief } from "@/lib/brief-store";
 
-// Placeholder home page. The real Sunday brief (map step 12) replaces this in checkpoint 8.
-export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
+// Map step 12: the latest Sunday brief.
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const row = await loadLatestBrief();
+  if (!row) {
+    return (
+      <>
         <h1>YouTube Trend Radar</h1>
-        <p>The Sunday content brief will appear here once the first run has finished.</p>
-      </main>
-    </div>
-  );
+        <p>No brief has been published yet. The first one appears after the Sunday run.</p>
+      </>
+    );
+  }
+  return <BriefPage row={row} />;
 }
