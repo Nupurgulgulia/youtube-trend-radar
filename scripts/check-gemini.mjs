@@ -18,5 +18,6 @@ if (res.ok) {
   console.log(`OK: key accepted, model ${body.name} is available (${body.displayName ?? "no display name"}).`);
 } else {
   console.error(`FAILED: HTTP ${res.status} ${body.error?.status ?? ""}: ${body.error?.message ?? "no message"}`);
-  process.exit(1);
+  // exitCode instead of process.exit(): exiting mid-cleanup crashes Node on Windows.
+  process.exitCode = 1;
 }
