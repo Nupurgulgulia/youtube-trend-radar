@@ -49,11 +49,18 @@ async function main() {
   const flagged = await markUnavailable(result.unavailableIds);
 
   // Append-only check: writing the same snapshots again with different numbers must change nothing.
+  const ids = result.snapshots.map((s) => s.videoId);
+  const day = result.observedAt.slice(0, 10);
+  const storedTotal = async () => {
+    const [r] = await db()`
+      select count(*)::int as n, coalesce(sum(views), 0)::bigint as total from video_snapshots
+      where observed_on = ${day}::date and video_id = any(${ids}::text[])`;
+    return { n: r.n as number, total: Number(r.total) };
+  };
+  const before = await storedTotal();
   const tampered = result.snapshots.map((s) => ({ ...s, views: s.views + 1_000_000 }));
   const reinserted = await insertSnapshots(tampered, run.id);
-  const [stored] = await db()`
-    select count(*)::int as n, sum(views)::bigint as total from video_snapshots where run_id = ${run.id}`;
-  const expectedTotal = result.snapshots.reduce((sum, s) => sum + s.views, 0);
+  const after = await storedTotal();
 
   const totalUnits = result.quotaUsed.generalUnits + 1; // + the category check
   await db()`
@@ -91,7 +98,10 @@ async function main() {
   console.log("\n== Database");
   console.log(`Snapshots inserted: ${inserted}; unavailable flagged: ${flagged}`);
   console.log(`Re-insert with changed numbers inserted: ${reinserted} (must be 0)`);
-  console.log(`Stored view total matches original: ${Number(stored.total) === expectedTotal} (${stored.n} rows)`);
+  console.log(`Stored view total unchanged by the re-insert: ${before.total === after.total} (${after.n} rows for ${day})`);
+  if (inserted < result.snapshots.length) {
+    console.log(`  ${result.snapshots.length - inserted} videos already had a snapshot today: their numbers were kept, only found_by was merged.`);
+  }
 
   console.log("\n== Sample (top 5 by views)");
   for (const v of [...result.videos].sort((a, b) => (b.views ?? 0) - (a.views ?? 0)).slice(0, 5)) {

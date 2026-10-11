@@ -49,10 +49,30 @@ export const clusterResponseSchema: Schema = {
   required: ["themes"],
 };
 
-export function selectCandidates(videos: ScoredVideo[]): ScoredVideo[] {
-  return [...videos]
-    .sort((a, b) => (b.bandIndex ?? -1) - (a.bandIndex ?? -1))
-    .slice(0, CLUSTER_CANDIDATE_LIMIT);
+// Fair share: every source (trending, and each keyword search) gets a turn, round-robin,
+// and inside a source the strongest videos for their age go first. Without this, viral
+// gadget videos fill every slot and keywords like "AI tools" never reach Gemini.
+// A video found by several sources is picked once. Videos with no recorded source
+// (collected before found_by existed) form one extra "unknown" source.
+export function selectCandidates(videos: ScoredVideo[], limit = CLUSTER_CANDIDATE_LIMIT): ScoredVideo[] {
+  const strongestFirst = (a: ScoredVideo, b: ScoredVideo) => (b.bandIndex ?? -1) - (a.bandIndex ?? -1);
+  const bySource = new Map<string, ScoredVideo[]>();
+  for (const v of videos) {
+    const sources = v.foundBy && v.foundBy.length > 0 ? v.foundBy : ["unknown"];
+    for (const s of sources) bySource.set(s, [...(bySource.get(s) ?? []), v]);
+  }
+  const queues = [...bySource.keys()].sort().map((s) => bySource.get(s)!.sort(strongestFirst));
+
+  const picked = new Map<string, ScoredVideo>();
+  while (picked.size < limit && queues.some((q) => q.length > 0)) {
+    for (const q of queues) {
+      while (q.length > 0 && picked.has(q[0].videoId)) q.shift();
+      const next = q.shift();
+      if (next) picked.set(next.videoId, next);
+      if (picked.size >= limit) break;
+    }
+  }
+  return [...picked.values()];
 }
 
 export const CLUSTER_SYSTEM = [

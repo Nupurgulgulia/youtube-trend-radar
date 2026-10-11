@@ -71,8 +71,9 @@ export async function upsertVideos(videos: CollectedVideo[], seenAt: string): Pr
       unavailable = false`;
 }
 
-// Append-only: an existing snapshot for the same video and day is never overwritten.
-// Returns how many new rows were written.
+// Append-only: an existing snapshot's numbers for the same video and day are never
+// overwritten. A same-day rerun (for example the catch-up run) only adds its sources
+// to found_by. Returns how many new rows were written.
 export async function insertSnapshots(snapshots: Snapshot[], runId: string): Promise<number> {
   if (snapshots.length === 0) return 0;
   const rows = snapshots.map((s) => ({
@@ -83,25 +84,35 @@ export async function insertSnapshots(snapshots: Snapshot[], runId: string): Pro
     likes: s.likes,
     comments: s.comments,
     channel_subscribers: s.channelSubscribers,
+    found_by: s.foundBy,
   }));
   const inserted = await db()`
-    insert into video_snapshots (video_id, observed_at, observed_on, run_id, views, likes, comments, channel_subscribers)
-    select video_id, observed_at, observed_on, ${runId}::uuid, views, likes, comments, channel_subscribers
+    insert into video_snapshots (video_id, observed_at, observed_on, run_id, views, likes, comments, channel_subscribers, found_by)
+    select video_id, observed_at, observed_on, ${runId}::uuid, views, likes, comments, channel_subscribers, found_by
     from jsonb_to_recordset(${JSON.stringify(rows)}::jsonb) as r(
       video_id text, observed_at timestamptz, observed_on date, views bigint,
-      likes bigint, comments bigint, channel_subscribers bigint)
-    on conflict (video_id, observed_on) do nothing
-    returning video_id`;
-  return inserted.length;
+      likes bigint, comments bigint, channel_subscribers bigint, found_by text[])
+    on conflict (video_id, observed_on) do update
+      set found_by = array(select distinct unnest(video_snapshots.found_by || excluded.found_by) order by 1)
+    returning (xmax = 0) as inserted`;
+  return inserted.filter((r) => r.inserted).length;
 }
 
-// Every video snapshotted by a run, with that run's numbers, ready for the Scorer.
-export async function loadRunVideos(runId: string): Promise<VideoInput[]> {
-  const rows = await db()`
-    select v.video_id, v.channel_id, v.channel_title, v.title, v.published_at, v.duration_sec, v.tags,
-           s.views, s.likes, s.comments
-    from video_snapshots s join videos v on v.video_id = s.video_id
-    where s.run_id = ${runId}`;
+// Videos with their stored snapshot for one UTC day, ready for the Scorer. Loaded by
+// date, not by run, because a second run on the same day (the catch-up run) reuses the
+// first run's snapshot rows. Pass videoIds to limit it to what this run collected.
+export async function loadDayVideos(observedOn: string, videoIds?: string[]): Promise<VideoInput[]> {
+  const rows = videoIds
+    ? await db()`
+        select v.video_id, v.channel_id, v.channel_title, v.title, v.published_at, v.duration_sec, v.tags,
+               s.views, s.likes, s.comments, s.found_by
+        from video_snapshots s join videos v on v.video_id = s.video_id
+        where s.observed_on = ${observedOn}::date and s.video_id = any(${videoIds}::text[])`
+    : await db()`
+        select v.video_id, v.channel_id, v.channel_title, v.title, v.published_at, v.duration_sec, v.tags,
+               s.views, s.likes, s.comments, s.found_by
+        from video_snapshots s join videos v on v.video_id = s.video_id
+        where s.observed_on = ${observedOn}::date`;
   return rows.map((r) => ({
     videoId: r.video_id,
     channelId: r.channel_id,
@@ -113,6 +124,7 @@ export async function loadRunVideos(runId: string): Promise<VideoInput[]> {
     views: r.views === null ? null : Number(r.views),
     likes: r.likes === null ? null : Number(r.likes),
     comments: r.comments === null ? null : Number(r.comments),
+    foundBy: r.found_by,
   }));
 }
 

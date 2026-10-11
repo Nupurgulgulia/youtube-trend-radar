@@ -1,4 +1,4 @@
-// Runs the Scorer on the most recent collection stored in the database (checkpoint 5).
+﻿// Runs the Scorer on the most recent collection stored in the database (checkpoint 5).
 // Read-only: no API calls, no AI, nothing written.
 // Run with: npm run score:test
 
@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { findings, type GroupStat } from "@/lib/findings";
 import { scoreVideos } from "@/lib/scorer";
 import { distinct } from "@/lib/stats";
-import { loadRunVideos } from "@/lib/store";
+import { loadDayVideos } from "@/lib/store";
 
 const fmt = (g: GroupStat) =>
   `${g.group.padEnd(14)} videos ${String(g.videos).padStart(3)}  creators ${String(g.creators).padStart(3)}  ` +
@@ -14,13 +14,14 @@ const fmt = (g: GroupStat) =>
   `engagement ${g.medianEngagement ?? "n/a"} (n=${g.engagementSample})${g.comparable ? "" : "  [too small]"}`;
 
 async function main() {
-  const [run] = await db()`
-    select r.id, r.week_id, max(s.observed_at) as observed_at
-    from runs r join video_snapshots s on s.run_id = r.id
-    group by r.id order by max(s.observed_at) desc limit 1`;
-  if (!run) throw new Error("No collected run found. Run npm run collect:test first.");
+  // The most recent day with snapshots, and the latest run (for logging Gemini calls).
+  const [latest] = await db()`
+    select observed_on::text as day, max(observed_at) as observed_at
+    from video_snapshots group by observed_on order by observed_on desc limit 1`;
+  const [run] = await db()`select id, week_id from runs order by started_at desc limit 1`;
+  if (!latest || !run) throw new Error("No collected data found. Run npm run collect:test first.");
 
-  const videos = scoreVideos(await loadRunVideos(run.id), new Date(run.observed_at).toISOString());
+  const videos = scoreVideos(await loadDayVideos(latest.day), new Date(latest.observed_at).toISOString());
   console.log(`Run ${run.week_id}: ${videos.length} videos, ${distinct(videos.map((v) => v.channelId))} creators`);
 
   const bands = new Map<string, number>();

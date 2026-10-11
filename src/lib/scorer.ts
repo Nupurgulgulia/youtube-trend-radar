@@ -19,6 +19,8 @@ export type VideoInput = {
   views: number | null;
   likes: number | null;
   comments: number | null;
+  // Sources that surfaced the video in this run, e.g. "trending:28", "search:AI tools".
+  foundBy?: string[];
 };
 
 export type ScoredVideo = VideoInput & {

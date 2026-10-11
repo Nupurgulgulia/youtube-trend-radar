@@ -33,6 +33,7 @@ export type Snapshot = {
   likes: number | null;
   comments: number | null;
   channelSubscribers: number | null;
+  foundBy: string[];
 };
 
 export type CollectionResult = {
@@ -196,6 +197,7 @@ export async function collect(settings: Settings, deps: CollectorDeps): Promise<
       likes: v.likes,
       comments: v.comments,
       channelSubscribers: v.channelSubscribers,
+      foundBy: v.foundBy,
     }));
 
   const youtubeFailed = collected.length === 0;
