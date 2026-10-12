@@ -1,0 +1,7 @@
+# Never upload local secrets or scratch files when deploying with the Vercel CLI.
+# Environment variables live in the Vercel project settings instead.
+.env*
+!.env.example
+.local/
+.next/
+node_modules/
