@@ -15,7 +15,8 @@
     "themes:test": "node --env-file=.env.local --conditions=react-server --import tsx scripts/themes-test.ts",
     "check:gemini": "node --env-file=.env.local scripts/check-gemini.mjs",
     "brief:test": "node --env-file=.env.local --conditions=react-server --import tsx scripts/brief-test.ts",
-    "reliability:test": "node --env-file=.env.local --conditions=react-server --import tsx scripts/reliability-test.ts"
+    "reliability:test": "node --env-file=.env.local --conditions=react-server --import tsx scripts/reliability-test.ts",
+    "email:test": "node --env-file=.env.local --conditions=react-server --import tsx scripts/test-email.ts"
   },
   "dependencies": {
     "@google/genai": "^2.28.0",
