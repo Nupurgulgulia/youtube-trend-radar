@@ -271,7 +271,6 @@ export default function BriefDashboard({ brief: b, isPreview, decisions: initial
   const [decisions, setDecisions] = useState<Record<string, Decision>>(initial);
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
-  const [showJson, setShowJson] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [sending, startSending] = useTransition();
@@ -434,7 +433,6 @@ export default function BriefDashboard({ brief: b, isPreview, decisions: initial
             <button type="button" className="btn-ghost btn-email" onClick={onEmail} disabled={sending}>
               {sending ? "Sending..." : "✉️ Email brief"}
             </button>
-            <button type="button" className="btn-ghost mono" onClick={() => setShowJson(true)}>{"{ }"} Raw JSON</button>
           </div>
         </div>
       </section>
@@ -517,21 +515,6 @@ export default function BriefDashboard({ brief: b, isPreview, decisions: initial
         <h3>Limitations</h3>
         <ul className="small">{c.limitations.map((l) => <li key={l}>{l}</li>)}</ul>
       </section>
-
-      {showJson && (
-        <div className="modal" role="dialog" aria-modal="true" aria-label="Brief JSON" onClick={() => setShowJson(false)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <span className="mono"><i className="green-dot" /> Brief payload (JSON), exactly as stored</span>
-              <div>
-                <button type="button" className="btn-ghost mono" onClick={() => copy(JSON.stringify(b, null, 2), "JSON copied")}>Copy JSON</button>
-                <button type="button" className="btn-x" aria-label="Close" onClick={() => setShowJson(false)}>✕</button>
-              </div>
-            </div>
-            <pre className="modal-body">{JSON.stringify(b, null, 2)}</pre>
-          </div>
-        </div>
-      )}
 
       <div className={`toast${toast ? " show" : ""}`} role="status" aria-live="polite">{toast}</div>
     </>
