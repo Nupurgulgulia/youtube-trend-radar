@@ -30,7 +30,7 @@ export async function logout(): Promise<void> {
 const DECISIONS: Decision[] = ["film", "skip", "investigate"];
 
 // Map step 14: Ishaan's decision for one theme, saved so next week can show it.
-// Called from the brief page. decision = null clears it ("needs triage" again).
+// Called from the brief page. decision = null clears it ("undecided" again).
 export async function setDecision(
   weekId: string,
   slug: string,

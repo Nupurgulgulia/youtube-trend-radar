@@ -91,7 +91,7 @@ function TopicCard(props: {
             {decision ? (
               <span className={`pill pill-dec-${decision}`}>{DECISION_ICON[decision]} {DECISION_BADGE[decision]}</span>
             ) : (
-              <span className="pill pill-muted">Needs triage</span>
+              <span className="pill pill-muted">Undecided</span>
             )}
           </div>
           <h2>{t.name}</h2>
@@ -114,7 +114,7 @@ function TopicCard(props: {
             </button>
           ))}
           {decision && (
-            <button type="button" className="dock-btn dock-reset" title="Reset to needs triage" aria-label="Reset decision" disabled={props.pending} onClick={() => props.onDecide(t.slug, null)}>
+            <button type="button" className="dock-btn dock-reset" title="Reset to undecided" aria-label="Reset decision" disabled={props.pending} onClick={() => props.onDecide(t.slug, null)}>
               ↺
             </button>
           )}
@@ -318,7 +318,7 @@ export default function BriefDashboard({ brief: b, isPreview, decisions: initial
     startTransition(async () => {
       const res = await setDecision(b.weekId, slug, d);
       if (res.ok) {
-        notify(d ? `${DECISION_ICON[d]} Saved: ${name.slice(0, 32)} marked ${decisionLabel[d]}` : `${name.slice(0, 32)} is back to needs triage`);
+        notify(d ? `${DECISION_ICON[d]} Saved: ${name.slice(0, 32)} marked ${decisionLabel[d]}` : `${name.slice(0, 32)} is back to undecided`);
         return;
       }
       setDecisions((cur) => {
@@ -384,7 +384,7 @@ export default function BriefDashboard({ brief: b, isPreview, decisions: initial
   const written = b.themes.filter((t) => t.written).length;
   const chips: [Filter, string, number][] = [
     ["all", "All topics", counts.all],
-    ["pending", "Needs triage", counts.pending],
+    ["pending", "Undecided", counts.pending],
     ["film", "🎬 Film queue", counts.film],
     ["investigate", "🔍 Investigating", counts.investigate],
     ["skip", "❌ Skipped", counts.skip],
