@@ -9,7 +9,8 @@ import type { GatedTheme } from "./theme-gate";
 // Gemini call 2: write (map step 10). Gemini receives the evidence built here and writes
 // each theme in labelled parts. Every number it may use is in this evidence, already rounded.
 
-export const NO_NEWS = "No related news found.";
+export { NO_NEWS } from "./brief-text";
+import { NO_NEWS } from "./brief-text";
 export const VIDEOS_PER_THEME = 5;
 
 export type ThemeEvidence = {

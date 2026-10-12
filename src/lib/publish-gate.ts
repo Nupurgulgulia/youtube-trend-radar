@@ -14,7 +14,7 @@ import {
 // given. One retry with the errors; a theme that still fails is published with its
 // evidence only and the note below. The rules are never relaxed.
 
-export const WRITTEN_FAILED_NOTE = "Written summary failed checks.";
+export { WRITTEN_FAILED_NOTE } from "./brief-text";
 // A written number matches an evidence number within this relative difference (rounding)...
 export const NUMBER_TOLERANCE = 0.02;
 // ...or within this absolute difference, for small numbers like 2.95 written as 3.

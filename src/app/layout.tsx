@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+const jakarta = Plus_Jakarta_Sans({ variable: "--font-jakarta", subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
+const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"], weight: ["400", "600", "700"] });
 
 export const metadata: Metadata = {
   title: "YouTube Trend Radar",
@@ -20,11 +18,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={geistSans.variable}>
+      <body className={`${jakarta.variable} ${jetbrains.variable}`}>
         <header className="site-header">
           <nav>
             <Link href="/" className="brand">
-              Trend <span>Radar</span>
+              <span className="brand-play" aria-hidden>
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+              </span>
+              YouTube Trend Radar
+              <span className="brand-tag">P13</span>
             </Link>
             <Link href="/">This week</Link>
             <Link href="/archive">Archive</Link>

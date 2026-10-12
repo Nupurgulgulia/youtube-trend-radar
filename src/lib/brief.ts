@@ -2,7 +2,7 @@ import type { SourceReport } from "./collector";
 import type { Findings } from "./findings";
 import type { NewsItem } from "./news";
 import type { PublishResult } from "./publish-gate";
-import { WRITTEN_FAILED_NOTE } from "./publish-gate";
+import { WRITTEN_FAILED_NOTE } from "./brief-text";
 import type { ScoredVideo } from "./scorer";
 import type { GatedTheme } from "./theme-gate";
 import type { ThemeEvidence, WrittenTheme } from "./write";

@@ -91,6 +91,11 @@ export async function saveDecision(weekId: string, slug: string, decision: Decis
     on conflict (week_id, theme_slug) do update set decision = excluded.decision, note = excluded.note, decided_at = now()`;
 }
 
+// Ishaan reset a theme to "needs triage". Only that one decision row is removed.
+export async function clearDecision(weekId: string, slug: string): Promise<void> {
+  await db()`delete from decisions where week_id = ${weekId} and theme_slug = ${slug}`;
+}
+
 export async function saveSettings(s: Settings): Promise<void> {
   await db()`
     update settings set
