@@ -30,6 +30,7 @@ export default function RootLayout({
             </Link>
             <Link href="/">This week</Link>
             <Link href="/archive">Archive</Link>
+            <Link href="/research">Research</Link>
             <Link href="/runs">Runs</Link>
             <Link href="/settings">Settings</Link>
           </nav>
