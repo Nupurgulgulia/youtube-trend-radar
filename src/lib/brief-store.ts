@@ -10,6 +10,7 @@ export type Decision = "film" | "skip" | "investigate";
 export type BriefRow = { weekId: string; status: string; publishedAt: string; content: BriefContent };
 
 export const isRealWeek = (weekId: string) => /^\d{4}-W\d{2}$/.test(weekId);
+export const isResearch = (weekId: string) => weekId.startsWith("research-");
 
 const toRow = (r: Record<string, unknown>): BriefRow => ({
   weekId: r.week_id as string,
@@ -31,15 +32,19 @@ export async function loadBrief(weekId: string): Promise<BriefRow | null> {
   return rows[0] ? toRow(rows[0]) : null;
 }
 
-export async function listBriefs(): Promise<{ weekId: string; status: string; publishedAt: string; themeCount: number }[]> {
+export async function listBriefs(): Promise<
+  { weekId: string; status: string; publishedAt: string; themeCount: number; researchTopic: string | null }[]
+> {
   const rows = await db()`
-    select week_id, status, published_at, jsonb_array_length(content->'themes') as theme_count
+    select week_id, status, published_at, jsonb_array_length(content->'themes') as theme_count,
+           content->>'researchTopic' as research_topic
     from briefs order by published_at desc`;
   return rows.map((r) => ({
     weekId: r.week_id,
     status: r.status,
     publishedAt: new Date(r.published_at).toISOString(),
     themeCount: Number(r.theme_count),
+    researchTopic: r.research_topic ?? null,
   }));
 }
 

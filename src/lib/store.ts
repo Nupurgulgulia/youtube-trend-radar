@@ -27,8 +27,9 @@ export async function loadSettings(): Promise<Settings> {
   };
 }
 
-// Videos from themes in roughly the last two weeks that are still available.
-// Refreshing their stats is what lets momentum compare two snapshots.
+// Videos from real Sunday themes in roughly the last two weeks that are still available.
+// Refreshing their stats is what lets momentum compare two snapshots. Only real ISO weeks
+// count, so research briefs and test previews never leak videos into the Sunday brief.
 export async function loadTrackedVideoIds(): Promise<string[]> {
   const rows = await db()`
     select distinct v.video_id
@@ -36,7 +37,8 @@ export async function loadTrackedVideoIds(): Promise<string[]> {
     join runs r on r.id = t.run_id
     cross join lateral unnest(t.video_ids) as tv(video_id)
     join videos v on v.video_id = tv.video_id
-    where r.started_at > now() - interval '15 days' and not v.unavailable`;
+    where r.started_at > now() - interval '15 days' and not v.unavailable
+      and t.week_id ~ '^[0-9]{4}-W[0-9]{2}$'`;
   return rows.map((r) => r.video_id as string);
 }
 

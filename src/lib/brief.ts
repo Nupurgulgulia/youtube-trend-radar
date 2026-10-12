@@ -45,6 +45,8 @@ export type Coverage = {
 
 export type BriefContent = {
   weekId: string;
+  // Set only on on-demand research briefs (label "research-..."), e.g. "PS5 jailbreak and PC/PS5 ports".
+  researchTopic?: string;
   status: "succeeded" | "thin";
   generatedAt: string;
   executiveSummary: string;

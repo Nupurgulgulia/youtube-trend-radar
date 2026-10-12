@@ -276,6 +276,7 @@ export default function BriefDashboard({ brief: b, isPreview, decisions: initial
   const [sending, startSending] = useTransition();
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const c = b.coverage;
+  const research = Boolean(b.researchTopic);
 
   const notify = (msg: string) => {
     setToast(msg);
@@ -367,7 +368,7 @@ export default function BriefDashboard({ brief: b, isPreview, decisions: initial
 
   const notionText = () => {
     const film = b.themes.filter((t) => decisions[t.slug] === "film");
-    const lines = [`SUNDAY FILMING PLAN FOR ISHAAN (${b.weekId})`, `Brief generated ${fmtDate(b.generatedAt)}. Status: ${b.status}.`, ""];
+    const lines = [research ? `RESEARCH BRIEF: ${b.researchTopic}` : `SUNDAY FILMING PLAN FOR ISHAAN (${b.weekId})`, `Brief generated ${fmtDate(b.generatedAt)}. Status: ${b.status}.`, ""];
     if (film.length === 0) lines.push("No topics marked Film yet.");
     film.forEach((t, i) => {
       lines.push(`TOPIC ${i + 1}: ${t.name}`);
@@ -393,19 +394,29 @@ export default function BriefDashboard({ brief: b, isPreview, decisions: initial
 
   return (
     <>
-      {isPreview && <p className="notice">Test preview built from a manual dry run. Not a real Sunday brief.</p>}
+      {research ? (
+        <p className="notice">Research brief, run on request with its own keywords. It is not part of the Sunday brief and was not emailed.</p>
+      ) : (
+        isPreview && <p className="notice">Test preview built from a manual dry run. Not a real Sunday brief.</p>
+      )}
 
       <section className="hero">
         <div className="hero-glow" aria-hidden />
         <div className="hero-main">
           <div className="hero-meta">
-            <span className={`tag ${b.status === "thin" ? "tag-amber" : "tag-red"}`}>{b.status === "thin" ? "THIN WEEK" : isPreview ? "TEST PREVIEW" : "SUNDAY RUN"}</span>
-            <span>Week <strong>{b.weekId}</strong></span>
-            <span className="dot">•</span>
+            <span className={`tag ${b.status === "thin" ? "tag-amber" : "tag-red"}`}>
+              {b.status === "thin" ? "THIN WEEK" : research ? "RESEARCH BRIEF" : isPreview ? "TEST PREVIEW" : "SUNDAY RUN"}
+            </span>
+            {!research && <span>Week <strong>{b.weekId}</strong></span>}
+            {!research && <span className="dot">•</span>}
             <span>Generated <strong>{fmtDate(b.generatedAt)}</strong></span>
-            {c.firstRun && <><span className="dot">•</span><span>First run</span></>}
+            {c.firstRun && !research && <><span className="dot">•</span><span>First run</span></>}
           </div>
-          <h1>Sunday Content Brief for <span className="blue">Ishaan</span></h1>
+          {research ? (
+            <h1>Research brief: <span className="blue">{b.researchTopic}</span></h1>
+          ) : (
+            <h1>Sunday Content Brief for <span className="blue">Ishaan</span></h1>
+          )}
           <p className="hero-sub">
             {b.themes.length} topic{b.themes.length === 1 ? "" : "s"} passed the quality checks, found in {fmtInt(c.videosScanned)} videos from {fmtInt(c.creators)} creators.
             Every number is computed from YouTube data; AI text is labelled.

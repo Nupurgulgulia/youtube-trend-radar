@@ -12,7 +12,9 @@ export const escapeHtml = (s: string) =>
 export function briefEmail(b: BriefContent, appUrl: string): EmailMessage {
   const link = `${appUrl.replace(/\/$/, "")}/brief/${encodeURIComponent(b.weekId)}`;
   const n = b.themes.length;
-  const subject = `Sunday brief ${b.weekId}: ${n} theme${n === 1 ? "" : "s"}${b.status === "thin" ? " (thin week)" : ""}`;
+  const subject = b.researchTopic
+    ? `Research brief: ${b.researchTopic} (${n} theme${n === 1 ? "" : "s"})`
+    : `Sunday brief ${b.weekId}: ${n} theme${n === 1 ? "" : "s"}${b.status === "thin" ? " (thin week)" : ""}`;
   const themeLine = (t: BriefContent["themes"][number]) =>
     `${t.name}: ${momentumLabel[t.momentum] ?? t.momentum}, ${t.confidence} confidence, ${t.measured.creator_count} creators, median ${fmtInt(t.measured.median_views_per_day)} views per day`;
 
