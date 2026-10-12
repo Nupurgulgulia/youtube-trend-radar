@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { setDecision } from "@/app/actions";
+import { emailBrief, setDecision } from "@/app/actions";
 import type { BriefContent, BriefTheme } from "@/lib/brief";
 import { NO_NEWS } from "@/lib/brief-text";
 import type { Comparison, GroupStat } from "@/lib/findings";
@@ -274,6 +274,7 @@ export default function BriefDashboard({ brief: b, isPreview, decisions: initial
   const [showJson, setShowJson] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [sending, startSending] = useTransition();
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const c = b.coverage;
 
@@ -354,6 +355,17 @@ export default function BriefDashboard({ brief: b, isPreview, decisions: initial
     notify(ok ? msg : "Could not copy. Your browser blocked the clipboard.");
   };
 
+  // Manual send: same email as the Sunday one, to the Settings address. Asks first.
+  const onEmail = () => {
+    if (!confirm(`Email the ${b.weekId} brief now to the address in Settings?`)) return;
+    startSending(async () => {
+      const res = await emailBrief(b.weekId);
+      if (res.ok) notify(`✉️ Brief emailed to ${res.to}`);
+      else if (res.needsLogin) router.push(`/login?next=${encodeURIComponent(`/brief/${b.weekId}`)}`);
+      else notify(res.error);
+    });
+  };
+
   const notionText = () => {
     const film = b.themes.filter((t) => decisions[t.slug] === "film");
     const lines = [`SUNDAY FILMING PLAN FOR ISHAAN (${b.weekId})`, `Brief generated ${fmtDate(b.generatedAt)}. Status: ${b.status}.`, ""];
@@ -418,6 +430,9 @@ export default function BriefDashboard({ brief: b, isPreview, decisions: initial
             <button type="button" className="btn-primary" onClick={() => copy(notionText(), `Copied ${counts.film} Film topic${counts.film === 1 ? "" : "s"} for Notion`)}>
               <svg viewBox="0 0 24 24" aria-hidden><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" /></svg>
               Copy brief for Notion
+            </button>
+            <button type="button" className="btn-ghost btn-email" onClick={onEmail} disabled={sending}>
+              {sending ? "Sending..." : "✉️ Email brief"}
             </button>
             <button type="button" className="btn-ghost mono" onClick={() => setShowJson(true)}>{"{ }"} Raw JSON</button>
           </div>

@@ -234,6 +234,7 @@ button:disabled { opacity: 0.6; cursor: progress; }
   font-size: 0.8rem;
 }
 .btn-ghost:hover, button:not([class]):hover { background: var(--hover); }
+.btn-email { color: #e4e4e7; font-weight: 600; }
 .btn-x { background: transparent; border: 0; color: var(--muted); font-size: 1rem; padding: 4px 8px; }
 .btn-x:hover { color: #fff; }
 

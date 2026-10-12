@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BriefContent } from "@/lib/brief";
-import { briefEmail, escapeHtml, failureEmail } from "@/lib/email";
+import { briefEmail, escapeHtml, failureEmail, manualSendKey, maskEmail } from "@/lib/email";
 
 const brief = {
   weekId: "2026-W42",
@@ -46,6 +46,20 @@ describe("failure email", () => {
     const m = failureEmail("2026-W42", "YouTube collection failed: quota exceeded", "https://radar.example.com");
     expect(m.subject).toBe("No brief this week (2026-W42)");
     expect(m.text).toBe("No brief this week: YouTube collection failed: quota exceeded. Coverage report: https://radar.example.com/runs");
+  });
+});
+
+describe("manual send helpers", () => {
+  it("masks the address shown on screen", () => {
+    expect(maskEmail("nupur@example.com")).toBe("nu***@example.com");
+    expect(maskEmail("a@example.com")).toBe("a***@example.com");
+  });
+
+  it("dedupes a double-click within the same minute, but not a later click", () => {
+    const t = new Date("2026-10-12T13:30:10Z");
+    expect(manualSendKey("2026-W41", t)).toBe(manualSendKey("2026-W41", new Date("2026-10-12T13:30:55Z")));
+    expect(manualSendKey("2026-W41", t)).not.toBe(manualSendKey("2026-W41", new Date("2026-10-12T13:31:05Z")));
+    expect(manualSendKey("2026-W41", t)).toMatch(/^manual-2026-W41-\d+$/);
   });
 });
 

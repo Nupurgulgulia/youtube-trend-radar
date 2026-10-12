@@ -111,6 +111,7 @@ curl -X POST http://localhost:3000/api/run -H "Authorization: Bearer $ADMIN_PASS
 
 - **Dry runs:** a run is dry unless the body says `"dryRun": false`. A dry run does everything except send email and is saved under its own `dryrun-<time>` label, so it never blocks the real Sunday run.
 - **Real runs:** a real manual run follows the same lock and email-once rules as the cron.
+- **Email brief button:** on the brief page, logged in, **Email brief** sends that week's brief to the Settings email (or `BRIEF_TO_EMAIL`) after asking for confirmation. It is separate from the weekly email-once rule, so it never blocks or replaces the Sunday email. A double-click within a minute sends one email.
 
 ## Scoring rules in brief
 

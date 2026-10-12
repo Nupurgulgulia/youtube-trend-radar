@@ -44,6 +44,14 @@ ${b.topOpportunities.length ? `<h3>Strongest opportunities</h3><ul>${b.topOpport
   return { subject, html, text };
 }
 
+// "nupur@example.com" -> "nu***@example.com", for confirmations shown on screen.
+export const maskEmail = (email: string) => email.replace(/^(.{1,2})[^@]*(@.*)$/, "$1***$2");
+
+// Manual sends from the brief page. The key repeats within the same minute, so a
+// double-click sends one email (Resend drops the repeat); a later click sends again.
+export const manualSendKey = (weekId: string, now: Date) =>
+  `manual-${weekId}-${Math.floor(now.getTime() / 60_000)}`;
+
 export function failureEmail(weekId: string, reason: string, appUrl: string): EmailMessage {
   const link = `${appUrl.replace(/\/$/, "")}/runs`;
   const subject = `No brief this week (${weekId})`;
