@@ -113,6 +113,22 @@ curl -X POST http://localhost:3000/api/run -H "Authorization: Bearer $ADMIN_PASS
 - **Real runs:** a real manual run follows the same lock and email-once rules as the cron.
 - **Email brief button:** on the brief page, logged in, **Email brief** sends that week's brief to the Settings email (or `BRIEF_TO_EMAIL`) after asking for confirmation. It is separate from the weekly email-once rule, so it never blocks or replaces the Sunday email. A double-click within a minute sends one email.
 
+## Research briefs (from the website)
+
+Anyone with the admin password can research any topic from the site, without code or a terminal:
+
+1. Open **Research** in the menu (or **+ New research** on the home page) and log in if asked.
+2. Type a topic. Optionally add up to 5 YouTube searches, pick a region and a trending category.
+3. Press **Start research**. A progress screen shows each stage; after about 1 to 2 minutes the finished brief opens. It also appears under **Latest research** on the home page and on the Research page.
+
+Research briefs use the same collector, Scorer, Gemini Flash prompts, Theme Gate and Publish Gate as the Sunday brief. They never change Settings, never touch the weekly lock and are never emailed automatically (the **Email brief** button still works on them). Guardrails:
+
+- **One at a time:** a second research is refused while one is running.
+- **Sunday is protected:** YouTube's `search.list` bucket (100 a day) resets at midnight Pacific Time, which is Saturday evening in India. A research is refused if it would leave fewer than 20 searches for the Sunday run.
+- **No leaking into Sunday:** only real Sunday weeks feed the "tracked videos" that the Sunday run re-checks.
+
+The same thing from the command line: `npm run research -- research/ps5-jailbreak.json`.
+
 ## Scoring rules in brief
 
 Full details, and every threshold, are in [docs/scoring.md](docs/scoring.md) and `src/lib/config/scoring.ts`. All thresholds are starting assumptions to tune, not facts.

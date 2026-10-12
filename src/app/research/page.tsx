@@ -1,20 +1,27 @@
 import Link from "next/link";
+import ResearchForm from "@/components/ResearchForm";
+import { isAdmin } from "@/lib/auth";
 import { isResearch, listBriefs } from "@/lib/brief-store";
 import { fmtDate } from "@/lib/format";
+import { loadSettings } from "@/lib/store";
 
-// Research briefs: the same pipeline as the Sunday brief, run on request with its own
-// topic and keywords (npm run research -- <config.json>). Newest first.
+// Research: start a new research brief from the website, and read past ones (newest first).
 export const dynamic = "force-dynamic";
 
 export default async function Research() {
-  const research = (await listBriefs()).filter((b) => isResearch(b.weekId));
+  const [briefs, admin, settings] = await Promise.all([listBriefs(), isAdmin(), loadSettings()]);
+  const research = briefs.filter((b) => isResearch(b.weekId));
   return (
     <>
-      <h1>Research briefs</h1>
+      <h1>Research</h1>
       <p className="muted">
-        Run on request with their own keywords, using the same data, quality checks and AI rules as the Sunday brief.
-        They are not part of the Sunday brief and are not emailed automatically.
+        Research any topic with the same live data, quality checks and AI rules as the Sunday brief.
+        Research briefs are separate from the Sunday brief and are not emailed automatically.
       </p>
+
+      <ResearchForm isAdmin={admin} defaultRegion={settings.regionCode} />
+
+      <h3>Past research</h3>
       {research.length === 0 ? (
         <p className="muted">No research briefs yet.</p>
       ) : (
